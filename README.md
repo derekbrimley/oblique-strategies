@@ -1,70 +1,72 @@
-# Getting Started with Create React App
+# Oblique Music Assistant
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+An AI-powered creative music assistant that uses Brian Eno's Oblique Strategies to help musicians overcome creative blocks and discover new musical directions through conversation.
+
+## What is this?
+
+This app transforms the classic Oblique Strategies cards into an intelligent conversational assistant specifically designed for musicians. Instead of random strategy cards, you get contextual advice from Claude AI that naturally weaves in relevant oblique strategies based on your specific musical challenges.
+
+## Features
+
+- 🎵 **Music-focused AI assistant** - Specialized in helping with composition, production, and creative blocks
+- 💬 **Conversational interface** - Chat naturally about your musical projects and challenges  
+- 🎯 **Contextual oblique strategies** - All 100+ original strategies integrated contextually into advice
+- 🎨 **Creative breakthrough tools** - Get unstuck with intelligent suggestions and thought-provoking questions
+- 📱 **Modern chat UI** - Beautiful, responsive interface that works on all devices
+
+## Setup
+
+1. **Clone and install dependencies**
+   ```bash
+   git clone [repository-url]
+   cd oblique-strategies
+   npm install
+   ```
+
+2. **Set up your Claude API key**
+   ```bash
+   cp .env.example .env
+   # Edit .env and add your Anthropic API key
+   ```
+   
+   Get your API key from [Anthropic Console](https://console.anthropic.com/)
+
+3. **Start the development server**
+   ```bash
+   npm start
+   ```
+   
+   Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+
+## How to Use
+
+1. **Start a conversation** - Tell the assistant about your current musical project or challenge
+2. **Get contextual advice** - Receive personalized suggestions that incorporate relevant oblique strategies
+3. **Explore ideas** - Ask follow-up questions and dive deeper into creative approaches
+4. **Break through blocks** - Use the AI's suggestions to approach your music from new angles
+
+### Example Conversations
+
+- "I'm stuck on this bridge section in my song"
+- "My drums sound boring - how can I make them more interesting?"
+- "I keep writing the same progressions over and over"
+- "How do I make my track sound more unique?"
+
+The assistant will respond with practical musical advice that naturally incorporates strategies like "Reverse", "Change instrument roles", "Use fewer notes", "Emphasize the flaws", and many others.
 
 ## Available Scripts
 
-In the project directory, you can run:
-
 ### `npm start`
-
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
-
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+Runs the app in development mode at [http://localhost:3000](http://localhost:3000)
 
 ### `npm test`
-
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+Launches the test runner in interactive watch mode
 
 ### `npm run build`
+Builds the app for production to the `build` folder
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+## About Oblique Strategies
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+Created by Brian Eno and Peter Schmidt, Oblique Strategies are a deck of cards meant to help artists overcome creative blocks. Each card contains a phrase or cryptic remark that can be used to break deadlocks or dilemmas in a creative situation.
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
-
-### `npm run eject`
-
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
-
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
-
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
-
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
-
-## Learn More
-
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
-
-To learn React, check out the [React documentation](https://reactjs.org/).
-
-### Code Splitting
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
-
-### Analyzing the Bundle Size
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
-
-### Making a Progressive Web App
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
-
-### Advanced Configuration
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
-
-### Deployment
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+This app contains all the original strategies and integrates them intelligently into conversational AI assistance specifically focused on music creation.

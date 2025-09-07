@@ -1,9 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import './App.css';
+import Anthropic from '@anthropic-ai/sdk';
 
-const strategies = [
-  'Take a Break',
-  'What are you thinking about right now?',
+const OBLIQUE_STRATEGIES = [
   'Abandon normal instruments',
   'Accept advice',
   'Accretion',
@@ -73,11 +72,9 @@ const strategies = [
   'Look at a very small object; look at its center',
   'Look at the order in which you do things',
   'Look closely at the most embarrassing details and amplify them',
-  'Lowest common denominator check -single beat -single note -single',
-  'riff',
+  'Lowest common denominator check -single beat -single note -single riff',
   'Make a blank valuable by putting it in an exquisite frame',
-  'Make an exhaustive list of everything you might do and do the last',
-  'thing on the list',
+  'Make an exhaustive list of everything you might do and do the last thing on the list',
   'Make a sudden, destructive, unpredictable action; incorporate',
   'Mechanicalize something idiosyncratic',
   'Mute and continue',
@@ -118,238 +115,199 @@ const strategies = [
   'Work at a different speed',
   'You are an engineer',
   'You can only make one dot at a time',
-  'You don\'t have to be ashamed of using your own ideas'
-];
-
-const breakActivities = [
-  'Take a walk around the block',
-  'Do 10 jumping jacks',
-  'Listen to your favorite song',
-  'Draw doodles on a piece of paper',
-  'Look out the window and observe something new',
-  'Do some deep breathing exercises',
-  'Stretch your arms and shoulders',
-  'Make yourself a cup of tea or coffee',
-  'Call a friend and have a quick chat',
-  'Write down three things you\'re grateful for',
-  'Do a quick meditation',
-  'Organize your desk or workspace',
-  'Read a page from a book',
-  'Take some photos of interesting things around you',
-  'Practice a few dance moves'
+  'You don\'t have to be ashamed of using your own ideas',
+  'Take a Break',
+  'What are you thinking about right now?'
 ];
 
 function App() {
-  const [currentStrategy, setCurrentStrategy] = useState('');
-  const [showStrategy, setShowStrategy] = useState(false);
-  const [isOnBreak, setIsOnBreak] = useState(false);
-  const [timeLeft, setTimeLeft] = useState(300);
-  const [breakActivity, setBreakActivity] = useState('');
-  const [streamText, setStreamText] = useState('');
-  const [showWordCloud, setShowWordCloud] = useState(false);
-  const [wordFrequency, setWordFrequency] = useState({});
+  const [messages, setMessages] = useState([
+    {
+      id: 1,
+      text: "I'm here to help you break through creative barriers in your music. Whether you're stuck on a melody, frustrated with a mix, or just feeling creatively blocked, let's explore some fresh perspectives together. What are you working on right now?",
+      sender: 'assistant',
+      timestamp: new Date()
+    }
+  ]);
+  const [inputText, setInputText] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const messagesEndRef = useRef(null);
 
   useEffect(() => {
-    let interval = null;
-    if (isOnBreak && timeLeft > 0) {
-      interval = setInterval(() => {
-        setTimeLeft(timeLeft - 1);
-      }, 1000);
-    } else if (timeLeft === 0) {
-      setIsOnBreak(false);
-      setTimeLeft(300);
+    scrollToBottom();
+  }, [messages]);
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  };
+
+  const getClaudeResponse = async (userMessage) => {
+    const apiKey = process.env.REACT_APP_ANTHROPIC_API_KEY;
+    if (!apiKey) {
+      return "I need an Anthropic API key to help you. Please add REACT_APP_ANTHROPIC_API_KEY to your environment variables.";
     }
-    return () => clearInterval(interval);
-  }, [isOnBreak, timeLeft]);
 
-  const getRandomStrategy = () => {
-    const randomIndex = Math.floor(Math.random() * strategies.length);
-    const strategy = strategies[randomIndex];
-    setCurrentStrategy(strategy);
-    setShowStrategy(true);
+    try {
+      const anthropic = new Anthropic({
+        apiKey: apiKey,
+        dangerouslyAllowBrowser: true
+      });
+
+      const conversationHistory = messages.map(msg => {
+        return `${msg.sender}: ${msg.text}`;
+      }).join('\n');
+
+      const systemPrompt = `You are a creative music assistant specializing in helping musicians overcome creative blocks using Brian Eno's Oblique Strategies. You have access to these specific strategies:
+
+${OBLIQUE_STRATEGIES.join(', ')}
+
+Your personality:
+- Encouraging but not overly cheerful
+- Thoughtful and curious about the user's creative process
+- Practical yet poetic in your suggestions
+- Focused on breakthrough moments and fresh perspectives
+
+Your approach:
+1. Listen carefully to the musician's specific challenge or context
+2. Naturally weave relevant oblique strategies into practical musical advice
+3. Ask probing questions that lead to new creative directions
+4. Suggest concrete musical experiments and techniques
+5. Help reframe problems as creative opportunities
+6. Focus on composition, production, arrangement, performance, and creative process
+
+Integration examples:
+- Instead of saying "Try 'Reverse'" → "What if you flipped the song around - started with the chorus, or played the melody backwards?"
+- Instead of saying "Use fewer notes" → "Sometimes less is more - what happens if you strip this down to just the essential notes?"
+- Instead of saying "Change instrument roles" → "What if the bass played the melody and the guitar held down the rhythm?"
+- Instead of saying "Honor thy error as a hidden intention" → "That mistake you made earlier - what if it wasn't a mistake but pointing toward something interesting?"
+
+Musical focus areas:
+- Composition: melody, harmony, rhythm, structure
+- Production: sound design, mixing, effects, arrangement
+- Performance: expression, dynamics, timing, interpretation
+- Creative process: workflow, inspiration, overcoming blocks
+
+Keep responses concise (2-4 sentences typically), practical, and always include a specific suggestion or question that moves the musician forward. Don't quote strategies directly - integrate them naturally into musical guidance.`;
+
+      const response = await anthropic.messages.create({
+        model: 'claude-3-haiku-20240307',
+        max_tokens: 300,
+        system: systemPrompt,
+        messages: [
+          {
+            role: 'user',
+            content: `Previous conversation:\n${conversationHistory}\n\nUser's new message: ${userMessage}`
+          }
+        ]
+      });
+
+      return response.content[0].text;
+    } catch (error) {
+      console.error('Error calling Claude API:', error);
+      return "I'm having trouble connecting right now. Make sure your API key is set correctly and try again.";
+    }
   };
 
-  const startBreak = () => {
-    const randomActivity = breakActivities[Math.floor(Math.random() * breakActivities.length)];
-    setBreakActivity(randomActivity);
-    setIsOnBreak(true);
-    setTimeLeft(300);
+  const sendMessage = async () => {
+    if (!inputText.trim() || isLoading) return;
+
+    const userMessage = {
+      id: messages.length + 1,
+      text: inputText.trim(),
+      sender: 'user',
+      timestamp: new Date()
+    };
+
+    setMessages(prev => [...prev, userMessage]);
+    setInputText('');
+    setIsLoading(true);
+
+    try {
+      const response = await getClaudeResponse(inputText.trim());
+      
+      const assistantMessage = {
+        id: messages.length + 2,
+        text: response,
+        sender: 'assistant',
+        timestamp: new Date()
+      };
+
+      setMessages(prev => [...prev, assistantMessage]);
+    } catch (error) {
+      console.error('Error:', error);
+      const errorMessage = {
+        id: messages.length + 2,
+        text: "Sorry, I encountered an error. Please try again.",
+        sender: 'assistant',
+        timestamp: new Date()
+      };
+      setMessages(prev => [...prev, errorMessage]);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const formatTime = (seconds) => {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins}:${secs.toString().padStart(2, '0')}`;
-  };
-
-  const analyzeText = () => {
-    if (!streamText.trim()) return;
-
-    const commonWords = new Set([
-      'the', 'a', 'an', 'and', 'or', 'but', 'in', 'on', 'at', 'to', 'for', 'of', 'with', 
-      'by', 'is', 'are', 'was', 'were', 'be', 'been', 'have', 'has', 'had', 'do', 'does', 
-      'did', 'will', 'would', 'could', 'should', 'may', 'might', 'can', 'i', 'you', 'he', 
-      'she', 'it', 'we', 'they', 'me', 'him', 'her', 'us', 'them', 'my', 'your', 'his', 
-      'her', 'its', 'our', 'their', 'this', 'that', 'these', 'those', 'am', 'so', 'just', 
-      'like', 'get', 'go', 'going', 'went', 'come', 'came', 'see', 'saw', 'know', 'think', 
-      'want', 'need', 'say', 'said', 'make', 'made', 'take', 'took', 'feel', 'felt', 'look', 
-      'looked', 'way', 'time', 'good', 'bad', 'big', 'small', 'long', 'short', 'new', 'old'
-    ]);
-
-    const words = streamText
-      .toLowerCase()
-      .replace(/[^\w\s]/g, ' ')
-      .split(/\s+/)
-      .filter(word => word.length > 2 && !commonWords.has(word));
-
-    const frequency = {};
-    words.forEach(word => {
-      frequency[word] = (frequency[word] || 0) + 1;
-    });
-
-    const sortedWords = Object.entries(frequency)
-      .sort(([,a], [,b]) => b - a)
-      .slice(0, 50);
-
-    const frequencyObj = Object.fromEntries(sortedWords);
-    setWordFrequency(frequencyObj);
-    setShowWordCloud(true);
-  };
-
-  const reset = () => {
-    setShowStrategy(false);
-    setCurrentStrategy('');
-    setIsOnBreak(false);
-    setTimeLeft(300);
-    setBreakActivity('');
-    setStreamText('');
-    setShowWordCloud(false);
-    setWordFrequency({});
+  const handleKeyPress = (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      sendMessage();
+    }
   };
 
   return (
     <div className="App">
-      <header className="App-header">
-        <h1>Oblique Strategies</h1>
-        <p>Get unblocked with tools based on Brian Eno's Oblique Strategies</p>
+      <div className="chat-container">
+        <header className="chat-header">
+          <h1>Oblique Music Assistant</h1>
+          <p>Your AI companion for creative music breakthroughs</p>
+        </header>
         
-        {!showStrategy && (
-          <button className="strategy-button" onClick={getRandomStrategy}>
-            Get a Strategy
-          </button>
-        )}
-        
-        {showStrategy && !isOnBreak && !showWordCloud && currentStrategy === 'Take a Break' && (
-          <div className="strategy-container">
-            <h2 className="strategy-title">{currentStrategy}</h2>
-            <p className="strategy-description">
-              Sometimes the best way forward is to step away. Take a 5-minute break 
-              and do something to refresh your mind.
-            </p>
-            <button className="break-button" onClick={startBreak}>
-              Start 5-Minute Break
-            </button>
-            <button className="reset-button" onClick={reset}>
-              Get Another Strategy
-            </button>
-          </div>
-        )}
-        
-        {showStrategy && !showWordCloud && currentStrategy === 'What are you thinking about right now?' && (
-          <div className="strategy-container">
-            <h2 className="strategy-title">{currentStrategy}</h2>
-            <p className="strategy-description">
-              Write down whatever is going through your mind right now. Don't edit yourself - 
-              just let your thoughts flow onto the page for a few minutes.
-            </p>
-            <textarea
-              className="stream-textarea"
-              value={streamText}
-              onChange={(e) => setStreamText(e.target.value)}
-              placeholder="Start writing whatever comes to mind... don't worry about grammar or structure, just let your thoughts flow..."
-              rows={8}
-            />
-            <div className="button-group">
-              <button 
-                className="analyze-button" 
-                onClick={analyzeText}
-                disabled={!streamText.trim()}
-              >
-                Analyze My Thoughts
-              </button>
-              <button className="reset-button" onClick={reset}>
-                Get Another Strategy
-              </button>
+        <div className="messages-container">
+          {messages.map((message) => (
+            <div key={message.id} className={`message ${message.sender}`}>
+              <div className="message-content">
+                {message.text}
+              </div>
+              <div className="message-time">
+                {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+              </div>
             </div>
-          </div>
-        ) || showStrategy && (
-
-          <div>
-            <div>{currentStrategy}</div>
-            <button className="reset-button" onClick={reset}>
-              Get Another Strategy
-            </button>
-          </div>
-        )}
-
-        {/* {showStrategy && !} */}
-        
-        {showWordCloud && (
-          <div className="word-cloud-container">
-            <h2 className="word-cloud-title">Your Thought Patterns</h2>
-            <p className="word-cloud-description">
-              Here are the most frequent meaningful words from your stream of consciousness:
-            </p>
-            <div className="word-cloud">
-              {Object.entries(wordFrequency).map(([word, count]) => (
-                <span 
-                  key={word} 
-                  className="word-cloud-item"
-                  style={{
-                    fontSize: `${Math.max(0.8, Math.min(2.5, count * 0.3 + 0.8))}rem`,
-                    opacity: Math.max(0.6, Math.min(1, count * 0.2 + 0.4))
-                  }}
-                >
-                  {word}
-                </span>
-              ))}
-            </div>
-            <div className="word-frequency-list">
-              <h3>Word Frequencies:</h3>
-              {Object.entries(wordFrequency).slice(0, 10).map(([word, count]) => (
-                <div key={word} className="frequency-item">
-                  <span className="word">{word}</span>
-                  <span className="count">{count}</span>
+          ))}
+          
+          {isLoading && (
+            <div className="message assistant">
+              <div className="message-content loading">
+                <div className="typing-indicator">
+                  <span></span>
+                  <span></span>
+                  <span></span>
                 </div>
-              ))}
+              </div>
             </div>
-            <button className="reset-button" onClick={reset}>
-              Try Another Strategy
-            </button>
-          </div>
-        )}
+          )}
+          
+          <div ref={messagesEndRef} />
+        </div>
         
-        {isOnBreak && (
-          <div className="break-container">
-            <h2 className="break-title">Break Time!</h2>
-            <div className="timer">{formatTime(timeLeft)}</div>
-            <p className="break-activity">{breakActivity}</p>
-            <button className="stop-break-button" onClick={() => setIsOnBreak(false)}>
-              End Break Early
-            </button>
-          </div>
-        )}
-        
-        {timeLeft === 0 && !isOnBreak && showStrategy && (
-          <div className="break-complete">
-            <h2>Break Complete!</h2>
-            <p>Ready to get back to your creative work?</p>
-            <button className="reset-button" onClick={reset}>
-              Get Another Strategy
-            </button>
-          </div>
-        )}
-      </header>
+        <div className="input-container">
+          <textarea
+            value={inputText}
+            onChange={(e) => setInputText(e.target.value)}
+            onKeyPress={handleKeyPress}
+            placeholder="Tell me about your musical challenge or what you're working on..."
+            className="message-input"
+            rows={1}
+            disabled={isLoading}
+          />
+          <button 
+            onClick={sendMessage}
+            disabled={!inputText.trim() || isLoading}
+            className="send-button"
+          >
+            Send
+          </button>
+        </div>
+      </div>
     </div>
   );
 }
